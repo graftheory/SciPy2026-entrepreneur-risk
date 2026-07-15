@@ -180,12 +180,24 @@ AXES = {
 
 AXIS_ORDER = ["capital", "time", "risk"]
 
+# The X/Y dropdowns additionally offer "None" (see build_post_script's
+# recompute() for what that triggers); the Size dropdown does not, so it
+# keeps using AXIS_ORDER directly.
+AXIS_ORDER_XY = AXIS_ORDER + ["none"]
+
 # Short labels for the dropdown buttons themselves (the full AXES labels are
 # used for axis titles, but are far too long for a dropdown button — using
 # them there was what made the X/Y axis menus so wide they threw off the
 # spacing between all three dropdowns).
-AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk"}
+AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk", "none": "None"}
 SIZE_SHORT_LABELS = ["Uniform", "By capital"]
+
+# When one axis is "None", the remaining data axis renders as a horizontal
+# dot plot (categorical rows on Y, sorted by this data axis's value; see
+# recompute() in build_post_script). Direction is whichever reads more
+# naturally top-to-bottom; capital and risk were specified, time defaults to
+# ascending (shortest-first) to match risk's convention.
+SORT_DIRECTION = {"capital": "desc", "time": "asc", "risk": "asc"}
 
 # Dict order is also legend order.
 RISK_TYPE_COLORS = {
@@ -311,10 +323,16 @@ def build_post_script():
     (function() {{
         var gd = document.getElementById("{DIV_ID}");
         var AXIS_ORDER = {json.dumps(AXIS_ORDER)};
+        var AXIS_ORDER_XY = {json.dumps(AXIS_ORDER_XY)};
         var AXIS_META = {json.dumps(axis_meta)};
+        var SORT_DIRECTION = {json.dumps(SORT_DIRECTION)};
+        var AXIS_TICK_FONT_SIZE = {json.dumps(AXIS_TICK_FONT_SIZE)};
         var MIN_SQRT = {json.dumps(min_sqrt)}, MAX_SQRT = {json.dumps(max_sqrt)};
         var MIN_SIZE = {json.dumps(MIN_MARKER_SIZE)}, MAX_SIZE = {json.dumps(MAX_MARKER_SIZE)}, UNIFORM_SIZE = {json.dumps(UNIFORM_MARKER_SIZE)};
         var currentX = "capital", currentY = "time", sizeByCapital = false;
+        // Updated by layoutHeader() on every resize so recompute() can size
+        // dot-plot row labels against the *current* plot area, not a stale one.
+        var currentPlotAreaHeight = 300;
 
         function valueFor(cd, key) {{
             if (key === "capital") return cd[1];
@@ -329,7 +347,8 @@ def build_post_script():
             return MIN_SIZE + t * (MAX_SIZE - MIN_SIZE);
         }}
 
-        function recompute() {{
+        // Plain 2D scatter: both axes are a real data key.
+        function recomputeScatter() {{
             var xArrays = [], yArrays = [], sizeArrays = [];
             gd.data.forEach(function(trace) {{
                 var xs = [], ys = [], sizes = [];
@@ -346,14 +365,96 @@ def build_post_script():
                 "xaxis.type": AXIS_META[currentX].log ? "log" : "linear",
                 "yaxis.title.text": AXIS_META[currentY].label,
                 "yaxis.type": AXIS_META[currentY].log ? "log" : "linear",
+                "yaxis.tickvals": null, "yaxis.ticktext": null, "yaxis.range": null,
+                "yaxis.tickfont.size": AXIS_TICK_FONT_SIZE, "yaxis.automargin": false,
             }});
+        }}
+
+        // Horizontal dot plot: exactly one axis is "none". The remaining
+        // data axis always renders along X (reoriented there even if it was
+        // picked via the Y dropdown) with category-name rows on Y, sorted by
+        // that data axis's value — this keeps the category names horizontal
+        // and legible however the user got here, rather than a vertical
+        // dot plot with rotated/truncated labels when X is the one set to
+        // "none".
+        function recomputeDotPlot(dataKey) {{
+            var xArrays = [], yArrays = [], sizeArrays = [];
+            var allPoints = [];
+            gd.data.forEach(function(trace, traceIdx) {{
+                var xs = [], ys = [], sizes = [];
+                trace.customdata.forEach(function(cd, pointIdx) {{
+                    var val = valueFor(cd, dataKey);
+                    xs.push(val);
+                    ys.push(0); // placeholder; filled in below once rows are sorted
+                    sizes.push(sizeFor(cd[1]));
+                    allPoints.push({{traceIdx: traceIdx, pointIdx: pointIdx, name: cd[0], value: val}});
+                }});
+                xArrays.push(xs); yArrays.push(ys); sizeArrays.push(sizes);
+            }});
+
+            var dir = SORT_DIRECTION[dataKey];
+            allPoints.sort(function(a, b) {{ return dir === "asc" ? a.value - b.value : b.value - a.value; }});
+            var n = allPoints.length;
+            var tickvals = [], ticktext = [];
+            allPoints.forEach(function(p, rank) {{
+                var row = (n - 1) - rank; // rank 0 (first in sorted order) sits at the top row
+                yArrays[p.traceIdx][p.pointIdx] = row;
+                tickvals.push(row);
+                ticktext.push(p.name);
+            }});
+
+            // Shrink (never enlarge) the row-label font if there isn't
+            // enough vertical room for all n rows to stay legible without
+            // overlapping, given the plot's *current* pixel height.
+            var rowHeight = currentPlotAreaHeight / n;
+            var rowFontSize = Math.max(9, Math.min(AXIS_TICK_FONT_SIZE, Math.floor(rowHeight * 0.55)));
+
+            Plotly.restyle(gd, {{x: xArrays, y: yArrays, "marker.size": sizeArrays}});
+            Plotly.relayout(gd, {{
+                "xaxis.title.text": AXIS_META[dataKey].label,
+                "xaxis.type": AXIS_META[dataKey].log ? "log" : "linear",
+                "yaxis.title.text": "",
+                "yaxis.type": "linear",
+                "yaxis.tickvals": tickvals,
+                "yaxis.ticktext": ticktext,
+                "yaxis.range": [-0.5, n - 0.5],
+                "yaxis.tickfont.size": rowFontSize,
+                // Reserve however much left margin the longest category name
+                // needs, rather than a fixed margin that would truncate it.
+                "yaxis.automargin": true,
+            }});
+        }}
+
+        function recompute() {{
+            var noneX = currentX === "none", noneY = currentY === "none";
+            if (noneX && noneY) return; // guarded against at the click handler; no-op if reached anyway
+            if (!noneX && !noneY) {{ recomputeScatter(); return; }}
+            recomputeDotPlot(noneX ? currentY : currentX);
         }}
 
         gd.on("plotly_buttonclicked", function(evt) {{
             var menuIdx = gd._fullLayout.updatemenus.indexOf(evt.menu);
-            if (menuIdx === 0) currentX = AXIS_ORDER[evt.active];
-            else if (menuIdx === 1) currentY = AXIS_ORDER[evt.active];
-            else if (menuIdx === 2) sizeByCapital = (evt.active === 1);
+            if (menuIdx === 0) {{
+                var newX = AXIS_ORDER_XY[evt.active];
+                if (newX === "none" && currentY === "none") {{
+                    // Both axes "none" would be a degenerate plot — keep the
+                    // last valid single-axis view and undo the dropdown's
+                    // own highlight so the UI doesn't show a selection we
+                    // didn't actually apply.
+                    Plotly.relayout(gd, {{"updatemenus[0].active": AXIS_ORDER_XY.indexOf(currentX)}});
+                    return;
+                }}
+                currentX = newX;
+            }} else if (menuIdx === 1) {{
+                var newY = AXIS_ORDER_XY[evt.active];
+                if (newY === "none" && currentX === "none") {{
+                    Plotly.relayout(gd, {{"updatemenus[1].active": AXIS_ORDER_XY.indexOf(currentY)}});
+                    return;
+                }}
+                currentY = newY;
+            }} else if (menuIdx === 2) {{
+                sizeByCapital = (evt.active === 1);
+            }}
             recompute();
         }});
 
@@ -441,6 +542,7 @@ def build_post_script():
             var marginT = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT
                 + GAP_LABEL_DROPDOWN + DROPDOWN_HEIGHT + GAP_DROPDOWN_PLOT;
             var plotAreaHeight = containerHeightPx - marginT - MARGIN_B;
+            currentPlotAreaHeight = plotAreaHeight;
 
             var effectiveTopPadding = TOP_PADDING - titlePaddingCorrection;
             var titleY = 1 - (effectiveTopPadding / containerHeightPx);
@@ -499,6 +601,10 @@ def build_post_script():
             gd.style.height = h + "px";
             Plotly.Plots.resize(gd);
             layoutHeader(w, h);
+            // Re-run whichever mode (scatter or dot plot) is active so a
+            // dot plot's row-label font size stays matched to the plot's
+            // current pixel height as the window resizes.
+            recompute();
         }}
         window.addEventListener("resize", fitAspect);
         fitAspect();
@@ -543,10 +649,10 @@ def main():
         # are similar lengths (see AXIS_SHORT_LABELS/SIZE_SHORT_LABELS) — the
         # gaps between them come out even instead of lopsided.
         updatemenus=[
-            dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER]),
+            dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER_XY]),
                  direction="down", x=1 / 6, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
-            dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER]),
+            dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER_XY]),
                  direction="down", x=0.5, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, active=1, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons(SIZE_SHORT_LABELS),
