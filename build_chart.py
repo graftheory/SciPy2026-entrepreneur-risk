@@ -341,7 +341,7 @@ def main():
         # generous top margin keeps physical space between the two bands so
         # they can't overlap regardless of the figure's pixel size.
         title=dict(
-            text="Entrepreneurship: Capital / Time / Risk by Business Category",
+            text="<b>Entrepreneurship: Capital / Time / Risk by Business Category</b>",
             x=0.5, xanchor="center",
             y=0.98, yanchor="top",
         ),
@@ -349,16 +349,16 @@ def main():
         yaxis=axis_layout(default_y),
         legend=dict(title="Risk type"),
         template="plotly_white",
-        margin=dict(t=210, b=60),
+        margin=dict(t=100, b=60),
         updatemenus=[
             dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
-                 direction="down", x=0.02, xanchor="left", y=1.02, yanchor="top",
+                 direction="down", x=0.02, xanchor="left", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
-                 direction="down", x=0.30, xanchor="left", y=1.02, yanchor="top",
+                 direction="down", x=0.30, xanchor="left", y=1.05, yanchor="top",
                  showactive=True, active=1, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons(["Size: uniform", "Size: by capital (sqrt)"]),
-                 direction="down", x=0.58, xanchor="left", y=1.02, yanchor="top",
+                 direction="down", x=0.58, xanchor="left", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
         ],
         annotations=[
