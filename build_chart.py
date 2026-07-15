@@ -180,6 +180,13 @@ AXES = {
 
 AXIS_ORDER = ["capital", "time", "risk"]
 
+# Short labels for the dropdown buttons themselves (the full AXES labels are
+# used for axis titles, but are far too long for a dropdown button — using
+# them there was what made the X/Y axis menus so wide they threw off the
+# spacing between all three dropdowns).
+AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk"}
+SIZE_SHORT_LABELS = ["Uniform", "By capital"]
+
 RISK_TYPE_COLORS = {
     "market": "#1f77b4",
     "technical": "#d62728",
@@ -231,9 +238,20 @@ def build_traces(x_key, y_key):
     return traces
 
 
+AXIS_TITLE_FONT_SIZE = 22
+AXIS_TICK_FONT_SIZE = 18
+TITLE_FONT_SIZE = 32
+LEGEND_TITLE_FONT_SIZE = 20
+LEGEND_ITEM_FONT_SIZE = 18
+LEGEND_ITEM_GAP = 14  # vertical px between legend entries — a bit more than default, not double-spaced
+
+
 def axis_layout(key):
     axis = AXES[key]
-    layout = dict(title=axis["label"])
+    layout = dict(
+        title=dict(text=axis["label"], font=dict(size=AXIS_TITLE_FONT_SIZE)),
+        tickfont=dict(size=AXIS_TICK_FONT_SIZE),
+    )
     if axis["log"]:
         layout["type"] = "log"
     return layout
@@ -344,27 +362,40 @@ def main():
             text="<b>Entrepreneurship: Capital / Time / Risk by Business Category</b>",
             x=0.5, xanchor="center",
             y=0.98, yanchor="top",
+            font=dict(size=TITLE_FONT_SIZE),
         ),
         xaxis=axis_layout(default_x),
         yaxis=axis_layout(default_y),
-        legend=dict(title="Risk type"),
+        legend=dict(
+            title=dict(text="<b>Risk Type</b>", font=dict(size=LEGEND_TITLE_FONT_SIZE)),
+            font=dict(size=LEGEND_ITEM_FONT_SIZE),
+            tracegroupgap=LEGEND_ITEM_GAP,
+            # Pin the legend's top edge to the plot's top edge so it only
+            # grows downward into the plot — otherwise its default vertical
+            # anchor lets it bleed upward into the dropdown row above.
+            x=1.02, xanchor="left", y=1, yanchor="top",
+        ),
         template="plotly_white",
         margin=dict(t=100, b=60),
+        # Evenly space all three dropdowns across the plot width using the
+        # same "center" anchor for each, so — now that their button labels
+        # are similar lengths (see AXIS_SHORT_LABELS/SIZE_SHORT_LABELS) — the
+        # gaps between them come out even instead of lopsided.
         updatemenus=[
-            dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
-                 direction="down", x=0.02, xanchor="left", y=1.05, yanchor="top",
+            dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER]),
+                 direction="down", x=1 / 6, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
-            dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
-                 direction="down", x=0.30, xanchor="left", y=1.05, yanchor="top",
+            dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER]),
+                 direction="down", x=0.5, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, active=1, pad=dict(r=10, t=10)),
-            dict(buttons=skip_buttons(["Size: uniform", "Size: by capital (sqrt)"]),
-                 direction="down", x=0.58, xanchor="left", y=1.05, yanchor="top",
+            dict(buttons=skip_buttons(SIZE_SHORT_LABELS),
+                 direction="down", x=5 / 6, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
         ],
         annotations=[
-            dict(text="X axis", x=0.02, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="left"),
-            dict(text="Y axis", x=0.30, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="left"),
-            dict(text="Point size", x=0.58, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="left"),
+            dict(text="X axis", x=1 / 6, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Y axis", x=0.5, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Point size", x=5 / 6, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
         ],
     )
 
