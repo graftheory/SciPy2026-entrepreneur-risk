@@ -141,7 +141,7 @@ categories = [
         "time_range": "6-18",
         "risk_pct": 65,
         "risk_type": "market/technical",
-        "data_quality": "PLACEHOLDER risk. Note this category is genuinely bimodal (cloud-API vs self-hosted) — consider splitting into two points before finalizing.",
+        "data_quality": "risk_pct is a PLACEHOLDER; risk_type: market/technical is NOT a placeholder — it's a deliberate classification (both market and technical risk are substantial here, neither dominant). Note this category is genuinely bimodal (cloud-API vs self-hosted) — consider splitting into two points before finalizing.",
     },
     {
         "id": 13,
@@ -152,7 +152,7 @@ categories = [
         "time_range": "6-18",
         "risk_pct": 60,
         "risk_type": "market/technical",
-        "data_quality": "PLACEHOLDER. Structurally identical spectrum to #12 (rent-vs-own infrastructure); consider merging with #12 visually or keeping separate for narrative clarity.",
+        "data_quality": "risk_pct is a PLACEHOLDER; risk_type: market/technical is NOT a placeholder — it's a deliberate classification (both market and technical risk are substantial here, neither dominant). Structurally identical spectrum to #12 (rent-vs-own infrastructure); consider merging with #12 visually or keeping separate for narrative clarity.",
     },
 ]
 
