@@ -412,6 +412,17 @@ def build_post_script():
             return lines;
         }}
 
+        // Plotly's title, even with yanchor="top", renders its topmost ink
+        // noticeably higher than the "y" position we ask for — consistently
+        // about one title-font-size unit higher, regardless of container
+        // size or line count (confirmed by comparing requested vs. actual
+        // rendered position). Rather than hardcode that as a guess, measure
+        // the real gap once after the first layout pass and fold it into
+        // TOP_PADDING from then on, so the title's actual rendered position
+        // matches what we intended instead of drifting above the container.
+        var titlePaddingCorrection = 0;
+        var titleCalibrated = false;
+
         function layoutHeader(containerWidthPx, containerHeightPx) {{
             var lines = wrapTitle(containerWidthPx - 2 * TITLE_SIDE_PADDING);
             var lineCount = lines.length;
@@ -420,7 +431,8 @@ def build_post_script():
                 + GAP_LABEL_DROPDOWN + DROPDOWN_HEIGHT + GAP_DROPDOWN_PLOT;
             var plotAreaHeight = containerHeightPx - marginT - MARGIN_B;
 
-            var titleY = 1 - (TOP_PADDING / containerHeightPx);
+            var effectiveTopPadding = TOP_PADDING - titlePaddingCorrection;
+            var titleY = 1 - (effectiveTopPadding / containerHeightPx);
             var labelCenterOffset = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT / 2;
             var labelY = 1 + (marginT - labelCenterOffset) / plotAreaHeight;
             var dropdownTopOffset = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT + GAP_LABEL_DROPDOWN;
@@ -432,6 +444,14 @@ def build_post_script():
                 "margin.t": marginT,
                 "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY,
                 "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY,
+            }}).then(function() {{
+                if (titleCalibrated) return;
+                titleCalibrated = true;
+                var titleEl2 = gd.querySelector("text.gtitle");
+                if (!titleEl2) return;
+                var actualTopOffset = titleEl2.getBoundingClientRect().top - gd.getBoundingClientRect().top;
+                titlePaddingCorrection = actualTopOffset - TOP_PADDING;
+                layoutHeader(containerWidthPx, containerHeightPx);
             }});
 
             // Debug snapshot: run window.__chartDebug() in the console to see
@@ -444,6 +464,7 @@ def build_post_script():
                     lines: lines, lineCount: lineCount, titleHeight: titleHeight,
                     computed: {{marginT: marginT, plotAreaHeight: plotAreaHeight, titleY: titleY, labelY: labelY, dropdownY: dropdownY}},
                     fudge: fudge, canvasFullWidth: canvasFullWidth, realFullWidth: realFullWidth,
+                    titlePaddingCorrection: titlePaddingCorrection, titleCalibrated: titleCalibrated,
                     actualMarginT: gd._fullLayout.margin.t,
                     actualTitleY: gd._fullLayout.title.y, actualTitleYref: gd._fullLayout.title.yref,
                     actualTitleYanchor: gd._fullLayout.title.yanchor,
