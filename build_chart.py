@@ -306,6 +306,23 @@ def build_post_script():
             else if (menuIdx === 2) sizeByCapital = (evt.active === 1);
             recompute();
         }});
+
+        // Lock the chart to a 16:9 box regardless of window/screen shape —
+        // fills whichever dimension is the tighter constraint, letterboxing
+        // the other (see body background) so it looks right on any laptop
+        // and matches a 16:9 projector without relying on the browser window
+        // itself being 16:9.
+        var ASPECT = 16 / 9;
+        function fitAspect() {{
+            var vw = window.innerWidth, vh = window.innerHeight;
+            var w = vw, h = vw / ASPECT;
+            if (h > vh) {{ h = vh; w = vh * ASPECT; }}
+            gd.style.width = w + "px";
+            gd.style.height = h + "px";
+            Plotly.Plots.resize(gd);
+        }}
+        window.addEventListener("resize", fitAspect);
+        fitAspect();
     }})();
     """
 
@@ -323,8 +340,7 @@ def main():
         yaxis=axis_layout(default_y),
         legend=dict(title="Risk type"),
         template="plotly_white",
-        width=1100,
-        height=750,
+        margin=dict(t=160),
         updatemenus=[
             dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
                  direction="down", x=0.02, xanchor="left", y=1.15, yanchor="top",
@@ -343,7 +359,31 @@ def main():
         ],
     )
 
-    fig.write_html("chart.html", include_plotlyjs=True, div_id=DIV_ID, post_script=build_post_script())
+    plot_fragment = fig.to_html(
+        include_plotlyjs=True,
+        full_html=False,
+        div_id=DIV_ID,
+        post_script=build_post_script(),
+    )
+
+    page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Entrepreneurship: Capital / Time / Risk Explorer</title>
+<style>
+  html, body {{ margin: 0; height: 100%; background: #111; overflow: hidden; }}
+  #{DIV_ID} {{ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; }}
+</style>
+</head>
+<body>
+{plot_fragment}
+</body>
+</html>
+"""
+
+    with open("chart.html", "w", encoding="utf-8") as f:
+        f.write(page)
     print("Wrote chart.html")
 
 
