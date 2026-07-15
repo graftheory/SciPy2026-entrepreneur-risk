@@ -140,7 +140,7 @@ categories = [
         "time_months": 10,
         "time_range": "6-18",
         "risk_pct": 65,
-        "risk_type": "mixed",
+        "risk_type": "market/technical",
         "data_quality": "PLACEHOLDER risk. Note this category is genuinely bimodal (cloud-API vs self-hosted) — consider splitting into two points before finalizing.",
     },
     {
@@ -151,7 +151,7 @@ categories = [
         "time_months": 10,
         "time_range": "6-18",
         "risk_pct": 60,
-        "risk_type": "mixed",
+        "risk_type": "market/technical",
         "data_quality": "PLACEHOLDER. Structurally identical spectrum to #12 (rent-vs-own infrastructure); consider merging with #12 visually or keeping separate for narrative clarity.",
     },
 ]
@@ -187,11 +187,22 @@ AXIS_ORDER = ["capital", "time", "risk"]
 AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk"}
 SIZE_SHORT_LABELS = ["Uniform", "By capital"]
 
+# Dict order is also legend order.
 RISK_TYPE_COLORS = {
-    "market": "#1f77b4",
-    "technical": "#d62728",
-    "regulatory": "#9467bd",
-    "mixed": "#7f7f7f",
+    "regulatory": "#7f7f7f",
+    "market": "#d62728",
+    "technical": "#1f77b4",
+    "market/technical": "#9467bd",
+}
+
+# Legend text only — wrapped after the "/" since "market/technical" is too
+# wide for the legend's margin as a single line. The underlying risk_type
+# value (used for data matching and the hover tooltip) stays unwrapped.
+LEGEND_LABELS = {
+    "regulatory": "regulatory",
+    "market": "market",
+    "technical": "technical",
+    "market/technical": "market/<br>technical",
 }
 
 MIN_MARKER_SIZE = 14
@@ -233,7 +244,7 @@ def build_traces(x_key, y_key):
                     for i in idx
                 ],
                 mode="markers",
-                name=risk_type,
+                name=LEGEND_LABELS[risk_type],
                 marker=dict(size=UNIFORM_MARKER_SIZE, color=RISK_TYPE_COLORS[risk_type], opacity=0.85),
                 hovertemplate=HOVERTEMPLATE,
                 hoverlabel=dict(font_size=24, font_family="Arial"),

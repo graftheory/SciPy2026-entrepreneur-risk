@@ -13,7 +13,7 @@ The chart compares business categories on three axes: **capital needed to reach 
 - **Capital needed to reach founder financial stability**: the amount of outside capital raised (or personal capital spent) by the point the founder is drawing something like a market-rate salary — NOT the total capital the company will ever raise or need to reach full commercialization/exit. E.g., pharma's famous "$2.6B to bring a drug to market" figure is explicitly *not* used here; we use the seed-round scale instead, since founders are typically salaried well before their drug/product reaches market.
 - **Time to founder stability**: months from founding decision to that same salary milestone.
 - **Risk**: probability of an *unplanned, distress-driven* exit before reaching founder stability — explicitly excludes planned/voluntary closures (retirement, planned wind-down of a single-purpose vehicle, selling a mature practice, "project ended" in the SBA's own closure-reason taxonomy). Where the underlying source doesn't distinguish distress from planned closure, this is noted in `data_quality`.
-- **Risk type**: `market` (would the product find paying customers, assuming it works as designed), `technical` (can it be built/proven to work at all), or `regulatory` (gated by an external approval process, e.g., FDA) — categories can blend; pick the dominant one.
+- **Risk type**: `market` (would the product find paying customers, assuming it works as designed), `technical` (can it be built/proven to work at all), or `regulatory` (gated by an external approval process, e.g., FDA) — pick the dominant one where possible. Where a category is genuinely bimodal/blended between market and technical (currently #12 and #13), use `market/technical` rather than picking one.
 
 ## Tech stack requirements
 
@@ -21,7 +21,7 @@ The chart compares business categories on three axes: **capital needed to reach 
 - Output must be a **single, fully self-contained HTML file** — no CDN references, no internet connection needed to view it, no Python kernel needed to run it. Use `fig.write_html("chart.html", include_plotlyjs=True)` explicitly (don't rely on the default without stating it — make it explicit in code so it's never accidentally left as `'cdn'`).
 - **No permanent point labels.** Points are unlabeled dots by default; the category name and full data (capital, time, risk, risk type) appear in a **large-font hover tooltip** via `hovertemplate`. Set `hoverlabel=dict(font_size=24, font_family="Arial")` (or similar) — default Plotly hover font (~13px) is too small to read from the back of a conference room; go big.
 - **Axis-switching dropdowns** via `layout.updatemenus`, so during the talk I can click a dropdown to change what's on the X axis and what's on the Y axis, choosing from: Capital (log scale), Time to stability (months), Risk (%). Also include a toggle for whether point size encodes capital (only meaningful when capital isn't already on an axis — disable/ignore it otherwise, don't double-encode).
-- **Color** encodes risk type (market / technical / regulatory) as a categorical variable — hold this constant across all axis combinations, with a visible legend.
+- **Color** encodes risk type (market / technical / regulatory / market-technical) as a categorical variable — hold this constant across all axis combinations, with a visible legend. Legend order and colors: `regulatory` (gray), `market` (red), `technical` (blue), `market/technical` (purple, listed last).
 - Capital axis should be **log-scaled** (values span ~$10K to ~$20M+); time and risk axes are linear.
 - When encoding capital as point size, scale by **square root of capital**, not raw value, and clamp the min/max radius so the largest point doesn't visually overwhelm the smallest (target something like a 3–4x size ratio between smallest and largest, not the raw ratio in the data).
 - Keep all data in one clearly-structured block (Python dict/list or a loaded CSV) at the top of the script — I will be hand-editing risk values after further research, so the data needs to be trivially editable without touching plotting logic.
@@ -162,7 +162,7 @@ categories = [
         "time_months": 10,
         "time_range": "6-18",
         "risk_pct": 65,
-        "risk_type": "mixed",
+        "risk_type": "market/technical",
         "data_quality": "PLACEHOLDER risk. Note this category is genuinely bimodal (cloud-API vs self-hosted) — consider splitting into two points before finalizing.",
     },
     {
@@ -173,7 +173,7 @@ categories = [
         "time_months": 10,
         "time_range": "6-18",
         "risk_pct": 60,
-        "risk_type": "mixed",
+        "risk_type": "market/technical",
         "data_quality": "PLACEHOLDER. Structurally identical spectrum to #12 (rent-vs-own infrastructure); consider merging with #12 visually or keeping separate for narrative clarity.",
     },
 ]
