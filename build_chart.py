@@ -194,10 +194,11 @@ SIZE_SHORT_LABELS = ["Uniform", "By capital"]
 
 # When one axis is "None", the remaining data axis renders as a horizontal
 # dot plot (categorical rows on Y, sorted by this data axis's value; see
-# recompute() in build_post_script). Direction is whichever reads more
-# naturally top-to-bottom; capital and risk were specified, time defaults to
-# ascending (shortest-first) to match risk's convention.
-SORT_DIRECTION = {"capital": "desc", "time": "asc", "risk": "asc"}
+# recompute() in build_post_script). Descending for all three — largest value
+# at the top row, decreasing as you read down — matching the standard
+# ranked-bar-chart/leaderboard convention, and consistent across axes rather
+# than flipping direction depending on which one is selected.
+SORT_DIRECTION = {"capital": "desc", "time": "desc", "risk": "desc"}
 
 # Dict order is also legend order.
 RISK_TYPE_COLORS = {
