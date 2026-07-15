@@ -200,6 +200,11 @@ UNIFORM_MARKER_SIZE = 22
 
 DIV_ID = "chart-div"
 
+# Split so the title can wrap to two lines (client-side, based on measured
+# text width vs. available plot width) when the window gets narrow.
+TITLE_LINE1 = "Entrepreneurship: Capital / Time / Failure Risk"
+TITLE_LINE2 = "by Business Category"
+
 # customdata layout per point: [name, capital_usd, time_months, risk_pct, risk_type]
 HOVERTEMPLATE = (
     "<b>%{customdata[0]}</b><br><br>"
@@ -331,6 +336,24 @@ def build_post_script():
         // and matches a 16:9 projector without relying on the browser window
         // itself being 16:9.
         var ASPECT = 16 / 9;
+
+        // Wrap the title to two lines once the window gets too narrow for it
+        // to fit on one, based on actually measuring the rendered text width
+        // rather than guessing at a fixed breakpoint.
+        var TITLE_LINE1 = {json.dumps(TITLE_LINE1)};
+        var TITLE_LINE2 = {json.dumps(TITLE_LINE2)};
+        var TITLE_FONT_PX = {json.dumps(TITLE_FONT_SIZE)};
+        var titleCtx = document.createElement("canvas").getContext("2d");
+        titleCtx.font = "bold " + TITLE_FONT_PX + "px Arial, sans-serif";
+        var titleOneLineWidth = titleCtx.measureText(TITLE_LINE1 + " " + TITLE_LINE2).width;
+
+        function fitTitle(plotWidthPx) {{
+            var text = (titleOneLineWidth + 40 > plotWidthPx)
+                ? "<b>" + TITLE_LINE1 + "<br>" + TITLE_LINE2 + "</b>"
+                : "<b>" + TITLE_LINE1 + " " + TITLE_LINE2 + "</b>";
+            Plotly.relayout(gd, {{"title.text": text}});
+        }}
+
         function fitAspect() {{
             var vw = window.innerWidth, vh = window.innerHeight;
             var w = vw, h = vw / ASPECT;
@@ -338,6 +361,7 @@ def build_post_script():
             gd.style.width = w + "px";
             gd.style.height = h + "px";
             Plotly.Plots.resize(gd);
+            fitTitle(w);
         }}
         window.addEventListener("resize", fitAspect);
         fitAspect();
@@ -359,7 +383,7 @@ def main():
         # generous top margin keeps physical space between the two bands so
         # they can't overlap regardless of the figure's pixel size.
         title=dict(
-            text="<b>Entrepreneurship: Capital / Time / Risk by Business Category</b>",
+            text=f"<b>{TITLE_LINE1} {TITLE_LINE2}</b>",
             x=0.5, xanchor="center",
             y=0.98, yanchor="top",
             font=dict(size=TITLE_FONT_SIZE),
