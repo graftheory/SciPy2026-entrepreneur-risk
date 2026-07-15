@@ -164,7 +164,11 @@ AXES = {
     "capital": {
         "label": "Capital needed to reach founder stability ($)",
         "values": [c["capital_usd"] for c in categories],
-        "log": True,
+        # Starts linear; toggled live via the Capital scale dropdown (see
+        # capitalLog in build_post_script) rather than fixed — this "log"
+        # flag is just capital's *initial* state, unlike time/risk below
+        # where it's permanent.
+        "log": False,
     },
     "time": {
         "label": "Time to founder stability (months)",
@@ -191,6 +195,7 @@ AXIS_ORDER_XY = AXIS_ORDER + ["none"]
 # spacing between all three dropdowns).
 AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk", "none": "None"}
 SIZE_SHORT_LABELS = ["Uniform", "By capital"]
+CAPITAL_SCALE_LABELS = ["Linear", "Log"]
 
 # When one axis is "None", the remaining data axis renders as a horizontal
 # dot plot (categorical rows on Y, sorted by this data axis's value; see
@@ -331,6 +336,10 @@ def build_post_script():
         var MIN_SQRT = {json.dumps(min_sqrt)}, MAX_SQRT = {json.dumps(max_sqrt)};
         var MIN_SIZE = {json.dumps(MIN_MARKER_SIZE)}, MAX_SIZE = {json.dumps(MAX_MARKER_SIZE)}, UNIFORM_SIZE = {json.dumps(UNIFORM_MARKER_SIZE)};
         var currentX = "capital", currentY = "time", sizeByCapital = false;
+        // Global — capital's scale, independent of whether it's currently on
+        // X, Y, or the sole data axis in a dot plot, and independent of
+        // whatever the presenter does with the other dropdowns afterward.
+        var capitalLog = false;
         // Updated by layoutHeader() on every resize so recompute() can size
         // dot-plot row labels against the *current* plot area, not a stale one.
         var currentPlotAreaHeight = 300;
@@ -339,6 +348,13 @@ def build_post_script():
             if (key === "capital") return cd[1];
             if (key === "time") return cd[2];
             return cd[3];
+        }}
+
+        // Time/risk are permanently linear; capital's type follows the
+        // live toggle instead of the static AXIS_META flag.
+        function axisTypeFor(key) {{
+            if (key === "capital") return capitalLog ? "log" : "linear";
+            return AXIS_META[key].log ? "log" : "linear";
         }}
 
         function sizeFor(capitalUsd) {{
@@ -363,9 +379,9 @@ def build_post_script():
             Plotly.restyle(gd, {{x: xArrays, y: yArrays, "marker.size": sizeArrays}});
             Plotly.relayout(gd, {{
                 "xaxis.title.text": AXIS_META[currentX].label,
-                "xaxis.type": AXIS_META[currentX].log ? "log" : "linear",
+                "xaxis.type": axisTypeFor(currentX),
                 "yaxis.title.text": AXIS_META[currentY].label,
-                "yaxis.type": AXIS_META[currentY].log ? "log" : "linear",
+                "yaxis.type": axisTypeFor(currentY),
                 "yaxis.tickvals": null, "yaxis.ticktext": null, "yaxis.range": null,
                 "yaxis.tickfont.size": AXIS_TICK_FONT_SIZE, "yaxis.automargin": false,
             }});
@@ -413,7 +429,7 @@ def build_post_script():
             Plotly.restyle(gd, {{x: xArrays, y: yArrays, "marker.size": sizeArrays}});
             Plotly.relayout(gd, {{
                 "xaxis.title.text": AXIS_META[dataKey].label,
-                "xaxis.type": AXIS_META[dataKey].log ? "log" : "linear",
+                "xaxis.type": axisTypeFor(dataKey),
                 "yaxis.title.text": "",
                 "yaxis.type": "linear",
                 "yaxis.tickvals": tickvals,
@@ -455,6 +471,8 @@ def build_post_script():
                 currentY = newY;
             }} else if (menuIdx === 2) {{
                 sizeByCapital = (evt.active === 1);
+            }} else if (menuIdx === 3) {{
+                capitalLog = (evt.active === 1); // 0 = Linear, 1 = Log
             }}
             recompute();
         }});
@@ -556,8 +574,8 @@ def build_post_script():
                 "title.text": "<b>" + lines.join("<br>") + "</b>",
                 "title.y": titleY,
                 "margin.t": marginT,
-                "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY,
-                "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY,
+                "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY, "annotations[3].y": labelY,
+                "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY, "updatemenus[3].y": dropdownY,
             }}).then(function() {{
                 if (titleCalibrated) return;
                 titleCalibrated = true;
@@ -645,25 +663,30 @@ def main():
         ),
         template="plotly_white",
         margin=dict(t=MARGIN_T, b=MARGIN_B),
-        # Evenly space all three dropdowns across the plot width using the
-        # same "center" anchor for each, so — now that their button labels
-        # are similar lengths (see AXIS_SHORT_LABELS/SIZE_SHORT_LABELS) — the
+        # Evenly space all four dropdowns across the plot width using the
+        # same "center" anchor for each (quarters: 1/8, 3/8, 5/8, 7/8), so —
+        # given their button labels are all similar, short lengths (see
+        # AXIS_SHORT_LABELS/SIZE_SHORT_LABELS/CAPITAL_SCALE_LABELS) — the
         # gaps between them come out even instead of lopsided.
         updatemenus=[
             dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER_XY]),
-                 direction="down", x=1 / 6, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=1 / 8, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER_XY]),
-                 direction="down", x=0.5, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=3 / 8, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, active=1, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons(SIZE_SHORT_LABELS),
-                 direction="down", x=5 / 6, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=5 / 8, xanchor="center", y=1.05, yanchor="top",
+                 showactive=True, pad=dict(r=10, t=10)),
+            dict(buttons=skip_buttons(CAPITAL_SCALE_LABELS),
+                 direction="down", x=7 / 8, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
         ],
         annotations=[
-            dict(text="X axis", x=1 / 6, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
-            dict(text="Y axis", x=0.5, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
-            dict(text="Point size", x=5 / 6, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="X axis", x=1 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Y axis", x=3 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Point size", x=5 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Capital scale", x=7 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
         ],
     )
 
