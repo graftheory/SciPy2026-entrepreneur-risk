@@ -433,6 +433,24 @@ def build_post_script():
                 "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY,
                 "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY,
             }});
+
+            // Debug snapshot: run window.__chartDebug() in the console to see
+            // everything this function just computed, next to what Plotly
+            // and the DOM actually did with it.
+            window.__chartDebug = function() {{
+                var titleEl2 = gd.querySelector("text.gtitle");
+                return {{
+                    containerWidthPx: containerWidthPx, containerHeightPx: containerHeightPx,
+                    lines: lines, lineCount: lineCount, titleHeight: titleHeight,
+                    computed: {{marginT: marginT, plotAreaHeight: plotAreaHeight, titleY: titleY, labelY: labelY, dropdownY: dropdownY}},
+                    fudge: fudge, canvasFullWidth: canvasFullWidth, realFullWidth: realFullWidth,
+                    actualMarginT: gd._fullLayout.margin.t,
+                    actualTitleY: gd._fullLayout.title.y, actualTitleYref: gd._fullLayout.title.yref,
+                    actualTitleYanchor: gd._fullLayout.title.yanchor,
+                    divRect: gd.getBoundingClientRect(),
+                    titleRect: titleEl2 ? titleEl2.getBoundingClientRect() : null,
+                }};
+            }};
         }}
 
         // Lock the chart to a 16:9 box regardless of window/screen shape —
