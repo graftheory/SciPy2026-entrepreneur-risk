@@ -200,10 +200,9 @@ UNIFORM_MARKER_SIZE = 22
 
 DIV_ID = "chart-div"
 
-# Split so the title can wrap to two lines (client-side, based on measured
-# text width vs. available plot width) when the window gets narrow.
-TITLE_LINE1 = "Entrepreneurship: Capital / Time / Failure Risk"
-TITLE_LINE2 = "by Business Category"
+# Wrapped client-side into as many lines as the window width needs (greedy
+# word-wrap, not a single fixed break point — see build_post_script).
+TITLE_TEXT = "Entrepreneurship: Capital / Time / Failure Risk by Business Category"
 
 # customdata layout per point: [name, capital_usd, time_months, risk_pct, risk_type]
 HOVERTEMPLATE = (
@@ -266,7 +265,6 @@ GAP_DROPDOWN_PLOT = 10
 MARGIN_B = 60
 
 MARGIN_T = TOP_PADDING + TITLE_LINE_HEIGHT + GAP_TITLE_LABEL + LABEL_HEIGHT + GAP_LABEL_DROPDOWN + DROPDOWN_HEIGHT + GAP_DROPDOWN_PLOT
-MARGIN_T_WRAPPED = MARGIN_T + TITLE_LINE_HEIGHT
 
 
 def axis_layout(key):
@@ -367,8 +365,8 @@ def build_post_script():
         // from those fixed pixel heights and the current container size —
         // that keeps the physical (pixel) spacing constant regardless of
         // window size, rather than leaving it to drift.
-        var TITLE_LINE1 = {json.dumps(TITLE_LINE1)};
-        var TITLE_LINE2 = {json.dumps(TITLE_LINE2)};
+        var TITLE_TEXT = {json.dumps(TITLE_TEXT)};
+        var TITLE_FONT_SIZE = {json.dumps(TITLE_FONT_SIZE)};
         var TOP_PADDING = {json.dumps(TOP_PADDING)};
         var TITLE_LINE_HEIGHT = {json.dumps(TITLE_LINE_HEIGHT)};
         var GAP_TITLE_LABEL = {json.dumps(GAP_TITLE_LABEL)};
@@ -377,20 +375,46 @@ def build_post_script():
         var DROPDOWN_HEIGHT = {json.dumps(DROPDOWN_HEIGHT)};
         var GAP_DROPDOWN_PLOT = {json.dumps(GAP_DROPDOWN_PLOT)};
         var MARGIN_B = {json.dumps(MARGIN_B)};
+        var TITLE_SIDE_PADDING = 40; // px reserved on each side so the title never touches the edges
 
-        // Measure the ACTUAL rendered width of the single-line title once,
-        // right after the initial draw (text width depends only on
-        // font/content, not container size, so one measurement is reusable)
-        // rather than estimating with an offscreen canvas: a canvas estimate
-        // systematically under-measured versus Plotly's real SVG text
-        // rendering, so the title kept overflowing the window before wrapping.
+        // Greedy word-wrap into as many lines as the container width needs —
+        // a single fixed break point (tried previously) leaves the first
+        // "half" too long to fit on its own once the window gets narrow
+        // enough to need wrapping at all, since the title's words aren't
+        // evenly sized. Wrapping requires measuring candidate line widths;
+        // an offscreen canvas estimates that, but canvas measureText()
+        // measurably under-reports versus Plotly's real SVG text rendering —
+        // so we calibrate it against one real measurement (the actual
+        // rendered width of the unwrapped title, taken right after the
+        // initial draw) and scale every canvas measurement by that factor.
+        var titleWords = TITLE_TEXT.split(" ");
+        var titleCtx = document.createElement("canvas").getContext("2d");
+        titleCtx.font = "bold " + TITLE_FONT_SIZE + "px Arial, sans-serif";
+        var canvasFullWidth = titleCtx.measureText(TITLE_TEXT).width;
         var titleEl = gd.querySelector("text.gtitle");
-        var titleOneLineWidth = titleEl ? titleEl.getBBox().width : 0;
-        var titleWrapped = false;
+        var realFullWidth = titleEl ? titleEl.getBBox().width : canvasFullWidth;
+        var fudge = canvasFullWidth > 0 ? (realFullWidth / canvasFullWidth) : 1;
+        function measureWidth(text) {{ return titleCtx.measureText(text).width * fudge; }}
+
+        function wrapTitle(maxWidthPx) {{
+            if (measureWidth(TITLE_TEXT) <= maxWidthPx) return [TITLE_TEXT];
+            var lines = [], current = "";
+            titleWords.forEach(function(word) {{
+                var candidate = current ? current + " " + word : word;
+                if (current && measureWidth(candidate) > maxWidthPx) {{
+                    lines.push(current);
+                    current = word;
+                }} else {{
+                    current = candidate;
+                }}
+            }});
+            if (current) lines.push(current);
+            return lines;
+        }}
 
         function layoutHeader(containerWidthPx, containerHeightPx) {{
-            titleWrapped = titleOneLineWidth + 30 > containerWidthPx;
-            var lineCount = titleWrapped ? 2 : 1;
+            var lines = wrapTitle(containerWidthPx - 2 * TITLE_SIDE_PADDING);
+            var lineCount = lines.length;
             var titleHeight = lineCount * TITLE_LINE_HEIGHT;
             var marginT = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT
                 + GAP_LABEL_DROPDOWN + DROPDOWN_HEIGHT + GAP_DROPDOWN_PLOT;
@@ -402,12 +426,8 @@ def build_post_script():
             var dropdownTopOffset = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT + GAP_LABEL_DROPDOWN;
             var dropdownY = 1 + (marginT - dropdownTopOffset) / plotAreaHeight;
 
-            var text = titleWrapped
-                ? "<b>" + TITLE_LINE1 + "<br>" + TITLE_LINE2 + "</b>"
-                : "<b>" + TITLE_LINE1 + " " + TITLE_LINE2 + "</b>";
-
             Plotly.relayout(gd, {{
-                "title.text": text,
+                "title.text": "<b>" + lines.join("<br>") + "</b>",
                 "title.y": titleY,
                 "margin.t": marginT,
                 "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY,
@@ -450,7 +470,7 @@ def main():
         # comment there for why), so these just need to be reasonable before
         # that first pass runs.
         title=dict(
-            text=f"<b>{TITLE_LINE1} {TITLE_LINE2}</b>",
+            text=f"<b>{TITLE_TEXT}</b>",
             x=0.5, xanchor="center",
             y=0.98, yanchor="top",
             font=dict(size=TITLE_FONT_SIZE),
