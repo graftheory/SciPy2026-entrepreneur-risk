@@ -196,6 +196,12 @@ AXIS_ORDER_XY = AXIS_ORDER + ["none"]
 AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk", "none": "None"}
 SIZE_SHORT_LABELS = ["Uniform", "By capital"]
 CAPITAL_SCALE_LABELS = ["Linear", "Log"]
+COLOR_TOGGLE_LABELS = ["Off", "On"]
+
+# Flat marker color used for every point when the color-by-risk-type toggle
+# is off. Distinct from the "regulatory" gray (#7f7f7f) so neutral mode
+# doesn't look like a risk-type color itself.
+NEUTRAL_MARKER_COLOR = "#404040"
 
 # When one axis is "None", the remaining data axis renders as a horizontal
 # dot plot (categorical rows on Y, sorted by this data axis's value; see
@@ -335,6 +341,7 @@ def build_post_script():
         var AXIS_TICK_FONT_SIZE = {json.dumps(AXIS_TICK_FONT_SIZE)};
         var MIN_SQRT = {json.dumps(min_sqrt)}, MAX_SQRT = {json.dumps(max_sqrt)};
         var MIN_SIZE = {json.dumps(MIN_MARKER_SIZE)}, MAX_SIZE = {json.dumps(MAX_MARKER_SIZE)}, UNIFORM_SIZE = {json.dumps(UNIFORM_MARKER_SIZE)};
+        var NEUTRAL_MARKER_COLOR = {json.dumps(NEUTRAL_MARKER_COLOR)};
         var currentX = "capital", currentY = "time", sizeByCapital = false;
         // Global — capital's scale, independent of whether it's currently on
         // X, Y, or the sole data axis in a dot plot, and independent of
@@ -343,6 +350,24 @@ def build_post_script():
         // Updated by layoutHeader() on every resize so recompute() can size
         // dot-plot row labels against the *current* plot area, not a stale one.
         var currentPlotAreaHeight = 300;
+
+        // Color-by-risk-type toggle. Captures each trace's ACTUAL current
+        // marker color at load — rather than hardcoding the four category
+        // names/colors — so this keeps working unmodified if the underlying
+        // categorical field is later replaced by a derived classification
+        // (e.g. a market/technical-score quadrant): whatever traces and
+        // colors exist at load time is what gets restored when toggled back
+        // on. Starts off (per spec), so this is applied once immediately.
+        var colorOn = false;
+        var originalColors = gd.data.map(function(trace) {{ return trace.marker.color; }});
+
+        function applyColorMode() {{
+            var colors = colorOn
+                ? originalColors
+                : gd.data.map(function() {{ return NEUTRAL_MARKER_COLOR; }});
+            Plotly.restyle(gd, {{"marker.color": colors}});
+            Plotly.relayout(gd, {{showlegend: colorOn}});
+        }}
 
         function valueFor(cd, key) {{
             if (key === "capital") return cd[1];
@@ -473,6 +498,10 @@ def build_post_script():
                 sizeByCapital = (evt.active === 1);
             }} else if (menuIdx === 3) {{
                 capitalLog = (evt.active === 1); // 0 = Linear, 1 = Log
+            }} else if (menuIdx === 4) {{
+                colorOn = (evt.active === 1); // 0 = Off, 1 = On
+                applyColorMode(); // touches marker.color/showlegend only — no need to recompute x/y/size
+                return;
             }}
             recompute();
         }});
@@ -574,8 +603,8 @@ def build_post_script():
                 "title.text": "<b>" + lines.join("<br>") + "</b>",
                 "title.y": titleY,
                 "margin.t": marginT,
-                "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY, "annotations[3].y": labelY,
-                "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY, "updatemenus[3].y": dropdownY,
+                "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY, "annotations[3].y": labelY, "annotations[4].y": labelY,
+                "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY, "updatemenus[3].y": dropdownY, "updatemenus[4].y": dropdownY,
             }}).then(function() {{
                 if (titleCalibrated) return;
                 titleCalibrated = true;
@@ -627,6 +656,7 @@ def build_post_script():
         }}
         window.addEventListener("resize", fitAspect);
         fitAspect();
+        applyColorMode(); // establishes the default OFF state (neutral color, no legend)
     }})();
     """
 
@@ -663,30 +693,35 @@ def main():
         ),
         template="plotly_white",
         margin=dict(t=MARGIN_T, b=MARGIN_B),
-        # Evenly space all four dropdowns across the plot width using the
-        # same "center" anchor for each (quarters: 1/8, 3/8, 5/8, 7/8), so —
-        # given their button labels are all similar, short lengths (see
-        # AXIS_SHORT_LABELS/SIZE_SHORT_LABELS/CAPITAL_SCALE_LABELS) — the
-        # gaps between them come out even instead of lopsided.
+        # Evenly space all five dropdowns across the plot width using the
+        # same "center" anchor for each (tenths: 1/10, 3/10, 5/10, 7/10,
+        # 9/10), so — given their button labels are all similar, short
+        # lengths (see AXIS_SHORT_LABELS/SIZE_SHORT_LABELS/
+        # CAPITAL_SCALE_LABELS/COLOR_TOGGLE_LABELS) — the gaps between them
+        # come out even instead of lopsided.
         updatemenus=[
             dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER_XY]),
-                 direction="down", x=1 / 8, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=1 / 10, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons([AXIS_SHORT_LABELS[k] for k in AXIS_ORDER_XY]),
-                 direction="down", x=3 / 8, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=3 / 10, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, active=1, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons(SIZE_SHORT_LABELS),
-                 direction="down", x=5 / 8, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=5 / 10, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons(CAPITAL_SCALE_LABELS),
-                 direction="down", x=7 / 8, xanchor="center", y=1.05, yanchor="top",
+                 direction="down", x=7 / 10, xanchor="center", y=1.05, yanchor="top",
+                 showactive=True, pad=dict(r=10, t=10)),
+            dict(buttons=skip_buttons(COLOR_TOGGLE_LABELS),
+                 direction="down", x=9 / 10, xanchor="center", y=1.05, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
         ],
         annotations=[
-            dict(text="X axis", x=1 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
-            dict(text="Y axis", x=3 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
-            dict(text="Point size", x=5 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
-            dict(text="Capital scale", x=7 / 8, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="X axis", x=1 / 10, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Y axis", x=3 / 10, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Point size", x=5 / 10, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Capital scale", x=7 / 10, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
+            dict(text="Color", x=9 / 10, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="center"),
         ],
     )
 
