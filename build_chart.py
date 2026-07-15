@@ -335,27 +335,36 @@ def main():
         fig.add_trace(tr)
 
     fig.update_layout(
-        title="Entrepreneurship: Capital / Time / Risk by Business Category",
+        # Title uses the default "container" ref (fraction of the whole
+        # canvas) pinned near the very top; dropdown labels/menus use "paper"
+        # ref (fraction of the plot area) so they scale with the plot. A
+        # generous top margin keeps physical space between the two bands so
+        # they can't overlap regardless of the figure's pixel size.
+        title=dict(
+            text="Entrepreneurship: Capital / Time / Risk by Business Category",
+            x=0.5, xanchor="center",
+            y=0.98, yanchor="top",
+        ),
         xaxis=axis_layout(default_x),
         yaxis=axis_layout(default_y),
         legend=dict(title="Risk type"),
         template="plotly_white",
-        margin=dict(t=160),
+        margin=dict(t=210, b=60),
         updatemenus=[
             dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
-                 direction="down", x=0.02, xanchor="left", y=1.15, yanchor="top",
+                 direction="down", x=0.02, xanchor="left", y=1.02, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons([AXES[k]["label"].split(" (")[0] for k in AXIS_ORDER]),
-                 direction="down", x=0.30, xanchor="left", y=1.15, yanchor="top",
+                 direction="down", x=0.30, xanchor="left", y=1.02, yanchor="top",
                  showactive=True, active=1, pad=dict(r=10, t=10)),
             dict(buttons=skip_buttons(["Size: uniform", "Size: by capital (sqrt)"]),
-                 direction="down", x=0.58, xanchor="left", y=1.15, yanchor="top",
+                 direction="down", x=0.58, xanchor="left", y=1.02, yanchor="top",
                  showactive=True, pad=dict(r=10, t=10)),
         ],
         annotations=[
-            dict(text="X axis", x=0.02, xref="paper", y=1.20, yref="paper", showarrow=False, xanchor="left"),
-            dict(text="Y axis", x=0.30, xref="paper", y=1.20, yref="paper", showarrow=False, xanchor="left"),
-            dict(text="Point size", x=0.58, xref="paper", y=1.20, yref="paper", showarrow=False, xanchor="left"),
+            dict(text="X axis", x=0.02, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="left"),
+            dict(text="Y axis", x=0.30, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="left"),
+            dict(text="Point size", x=0.58, xref="paper", y=1.10, yref="paper", showarrow=False, xanchor="left"),
         ],
     )
 
