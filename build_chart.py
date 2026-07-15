@@ -19,8 +19,9 @@ categories = [
         "time_months": 30,
         "time_range": "24-36",
         "risk_pct": 88,
-        "risk_type": "regulatory",
-        "data_quality": "risk_pct is Phase-1-to-approval DRUG failure rate (DiMasi/Tufts CSDD), used as a proxy — measures technical/regulatory failure of the lead program, not founder-level financial outcome. Capital reframed to seed-round scale per Definitions, not the full ~$2.6-2.9B lifecycle cost.",
+        "market_risk_score": 85,
+        "technical_risk_score": 85,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs. market_risk here is driven primarily by FDA regulatory approval and payer/reimbursement gates, not end-patient demand uncertainty — patients want effective treatments; the customer segments that must actually be satisfied are regulators and payers. technical_risk reflects the historical ~90% clinical-trial failure rate for novel drug candidates. risk_pct is unchanged: Phase-1-to-approval DRUG failure rate (DiMasi/Tufts CSDD), used as a proxy — measures technical/regulatory failure of the lead program, not founder-level financial outcome. Capital reframed to seed-round scale per Definitions, not the full ~$2.6-2.9B lifecycle cost.",
     },
     {
         "id": 2,
@@ -30,8 +31,9 @@ categories = [
         "time_months": 30,
         "time_range": "24-36",
         "risk_pct": 65,
-        "risk_type": "regulatory",
-        "data_quality": "PLACEHOLDER — no sourced founder-level or company-level exit-type data found. Full PMA-cycle cost is $94-118M (Stanford/PwC, HHS study) but that's total company spend, not founder-stability capital. Needs further research.",
+        "market_risk_score": 75,
+        "technical_risk_score": 60,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs. market_risk here is driven primarily by FDA PMA approval, payer reimbursement, and provider (hospital/clinician) adoption gates — not end-patient demand. technical_risk reflects device engineering/clinical-performance risk. risk_pct: PLACEHOLDER — no sourced founder-level or company-level exit-type data found. Full PMA-cycle cost is $94-118M (Stanford/PwC, HHS study) but that's total company spend, not founder-stability capital. Needs further research.",
     },
     {
         "id": 3,
@@ -41,8 +43,9 @@ categories = [
         "time_months": 28,
         "time_range": "24-30",
         "risk_pct": 75,
-        "risk_type": "technical",
-        "data_quality": "PLACEHOLDER risk value. Capital/time anchored loosely to deep tech VC benchmarking (~24% of global VC in 2023, ~$79B, concentrated Series B+). No clean founder-level outcome dataset found.",
+        "market_risk_score": 40,
+        "technical_risk_score": 80,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; technical_risk dominates (fundamental feasibility risk) with more modest market_risk (real, but more tractable once the technology works). risk_pct: PLACEHOLDER risk value. Capital/time anchored loosely to deep tech VC benchmarking (~24% of global VC in 2023, ~$79B, concentrated Series B+). No clean founder-level outcome dataset found.",
     },
     {
         "id": 4,
@@ -52,8 +55,9 @@ categories = [
         "time_months": 18,
         "time_range": "12-24",
         "risk_pct": 55,
-        "risk_type": "technical",
-        "data_quality": "Capital anchored to Kauffman Firm Survey high-tech-firm average (~$275K). Risk_pct is a PLACEHOLDER.",
+        "market_risk_score": 40,
+        "technical_risk_score": 60,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; technical_risk (engineering/prototyping/manufacturing) somewhat exceeds market_risk here. Capital anchored to Kauffman Firm Survey high-tech-firm average (~$275K). risk_pct is a PLACEHOLDER.",
     },
     {
         "id": 5,
@@ -63,8 +67,9 @@ categories = [
         "time_months": 20,
         "time_range": "18-24",
         "risk_pct": 75,
-        "risk_type": "market",
-        "data_quality": "Capital from 2025 YC/seed benchmarking data. Risk from Ghosh (HBS): ~75% of VC-backed companies never return capital — this is the CONDITIONAL rate (given funded). See category 7 note on the unconditional rate.",
+        "market_risk_score": 70,
+        "technical_risk_score": 40,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; market_risk (product-market fit, competitive dynamics) clearly dominates — building the software is hard but usually achievable given enough R&D investment. Capital from 2025 YC/seed benchmarking data. risk_pct from Ghosh (HBS): ~75% of VC-backed companies never return capital — this is the CONDITIONAL rate (given funded). See category 7 note on the unconditional rate.",
     },
     {
         "id": 6,
@@ -74,8 +79,9 @@ categories = [
         "time_months": 12,
         "time_range": "6-18 (note: some markets require ~18mo for liquor licensing alone)",
         "risk_pct": 28,
-        "risk_type": "market",
-        "data_quality": "Capital from industry restaurant-opening-cost surveys. Risk_pct is an estimate derived from SBA/Census closure-reason data (~25-30% of small-business closures are distress-driven; most restaurant closures are plausibly non-distress, e.g., planned concept changes) — not a restaurant-specific measured figure.",
+        "market_risk_score": 55,
+        "technical_risk_score": 15,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; market_risk (will customers come, concept/location fit) clearly dominates — the operational/technical side of running a restaurant is well-understood. Capital from industry restaurant-opening-cost surveys. risk_pct is an estimate derived from SBA/Census closure-reason data (~25-30% of small-business closures are distress-driven; most restaurant closures are plausibly non-distress, e.g., planned concept changes) — not a restaurant-specific measured figure.",
     },
     {
         "id": 7,
@@ -85,8 +91,9 @@ categories = [
         "time_months": 15,
         "time_range": "12-18",
         "risk_pct": 75,
-        "risk_type": "market",
-        "data_quality": "CONDITIONAL risk (given VC funding secured): ~75% of founders get zero equity payout even when funded (Hall & Woodward, n=22,004 VC-backed cos, 1987-2008). UNCONDITIONAL risk, including everyone who tries but never gets funded (~1% of aspiring VC-track founders raise VC at all): approx 99.75% get nothing. STRONGLY consider adding both a 'conditional' and 'unconditional' variant of this category, or a toggle — this distinction is a core teaching point of the talk.",
+        "market_risk_score": 75,
+        "technical_risk_score": 35,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; market_risk (product-market fit) clearly dominates for an 'average' (non-deep-tech) startup, where building the product itself is usually feasible. risk_pct: CONDITIONAL risk (given VC funding secured): ~75% of founders get zero equity payout even when funded (Hall & Woodward, n=22,004 VC-backed cos, 1987-2008). UNCONDITIONAL risk, including everyone who tries but never gets funded (~1% of aspiring VC-track founders raise VC at all): approx 99.75% get nothing. STRONGLY consider adding both a 'conditional' and 'unconditional' variant of this category, or a toggle — this distinction is a core teaching point of the talk.",
     },
     {
         "id": 8,
@@ -96,8 +103,9 @@ categories = [
         "time_months": 12,
         "time_range": "6-18 (median 12-18mo to $10K MRR, for those who get there)",
         "risk_pct": 70,
-        "risk_type": "market",
-        "data_quality": "Risk derived from indie-hacker/MicroConf community survey data (not peer-reviewed, but the best available for this population): ~40% never reach $1K MRR. See separate MRR dataset below for the fuller distribution — worth its own slide/chart per prior discussion.",
+        "market_risk_score": 70,
+        "technical_risk_score": 20,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; market_risk (finding paying users in a crowded app market) clearly dominates — building a lightweight app solo is usually straightforward. risk_pct derived from indie-hacker/MicroConf community survey data (not peer-reviewed, but the best available for this population): ~40% never reach $1K MRR. See separate MRR dataset below for the fuller distribution — worth its own slide/chart per prior discussion.",
     },
     {
         "id": 9,
@@ -107,8 +115,9 @@ categories = [
         "time_months": 9,
         "time_range": "6-12",
         "risk_pct": 40,
-        "risk_type": "market",
-        "data_quality": "PLACEHOLDER. BLS shows this NAICS sector (Professional/Scientific/Technical Services) has an ABOVE-average closure rate (25.5% yr1, 65.7% yr10) — but likely disproportionately non-distress given low capital at risk. No sector-specific closure-reason breakdown found.",
+        "market_risk_score": 40,
+        "technical_risk_score": 15,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; market_risk (finding/retaining clients) clearly dominates — delivering the professional service itself is low-uncertainty, established expertise. risk_pct: PLACEHOLDER. BLS shows this NAICS sector (Professional/Scientific/Technical Services) has an ABOVE-average closure rate (25.5% yr1, 65.7% yr10) — but likely disproportionately non-distress given low capital at risk. No sector-specific closure-reason breakdown found.",
     },
     {
         "id": 10,
@@ -118,8 +127,9 @@ categories = [
         "time_months": 4,
         "time_range": "1-6",
         "risk_pct": 30,
-        "risk_type": "market",
-        "data_quality": "Capital figure sourced (solo remote consultancies startable under $10K). Risk_pct is a PLACEHOLDER anchored loosely to general small-business distress rate (~25-30%, SBA/Census).",
+        "market_risk_score": 40,
+        "technical_risk_score": 10,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; market_risk (finding clients as a solo consultant) clearly dominates — delivering consulting from existing expertise is very low technical uncertainty. Capital figure sourced (solo remote consultancies startable under $10K). risk_pct is a PLACEHOLDER anchored loosely to general small-business distress rate (~25-30%, SBA/Census).",
     },
     {
         "id": 11,
@@ -129,8 +139,9 @@ categories = [
         "time_months": 12,
         "time_range": "6-12",
         "risk_pct": 45,
-        "risk_type": "technical",
-        "data_quality": "Capital range sourced from practitioner accounts. Risk_pct is a PLACEHOLDER.",
+        "market_risk_score": 35,
+        "technical_risk_score": 55,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs; technical_risk (fabrication process/equipment/yield reliability) somewhat exceeds market_risk here. Capital range sourced from practitioner accounts. risk_pct is a PLACEHOLDER.",
     },
     {
         "id": 12,
@@ -140,8 +151,9 @@ categories = [
         "time_months": 10,
         "time_range": "6-18",
         "risk_pct": 65,
-        "risk_type": "market/technical",
-        "data_quality": "risk_pct is a PLACEHOLDER; risk_type: market/technical is NOT a placeholder — it's a deliberate classification (both market and technical risk are substantial here, neither dominant). Note this category is genuinely bimodal (cloud-API vs self-hosted) — consider splitting into two points before finalizing.",
+        "market_risk_score": 65,
+        "technical_risk_score": 60,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs, both comparably high (commoditizing/competitive AI product space drives market_risk; whether the system performs reliably at spec — especially the self-hosted variant — drives technical_risk). This replaces the old hand-assigned 'market/technical' hybrid label with a derived both-high classification. risk_pct is a PLACEHOLDER. Note this category is genuinely bimodal (cloud-API vs self-hosted) — consider splitting into two points before finalizing.",
     },
     {
         "id": 13,
@@ -151,8 +163,9 @@ categories = [
         "time_months": 10,
         "time_range": "6-18",
         "risk_pct": 60,
-        "risk_type": "market/technical",
-        "data_quality": "risk_pct is a PLACEHOLDER; risk_type: market/technical is NOT a placeholder — it's a deliberate classification (both market and technical risk are substantial here, neither dominant). Structurally identical spectrum to #12 (rent-vs-own infrastructure); consider merging with #12 visually or keeping separate for narrative clarity.",
+        "market_risk_score": 60,
+        "technical_risk_score": 55,
+        "data_quality": "market_risk_score and technical_risk_score are illustrative PLACEHOLDERs, both comparably high (commoditized/competitive hosting market drives market_risk; infrastructure reliability/uptime engineering drives technical_risk). This replaces the old hand-assigned 'market/technical' hybrid label with a derived both-high classification. risk_pct is a PLACEHOLDER. Structurally identical spectrum to #12 (rent-vs-own infrastructure); consider merging with #12 visually or keeping separate for narrative clarity.",
     },
 ]
 
@@ -180,9 +193,19 @@ AXES = {
         "values": [c["risk_pct"] for c in categories],
         "log": False,
     },
+    "market_risk": {
+        "label": "Market risk score (0-100, illustrative)",
+        "values": [c["market_risk_score"] for c in categories],
+        "log": False,
+    },
+    "technical_risk": {
+        "label": "Technical risk score (0-100, illustrative)",
+        "values": [c["technical_risk_score"] for c in categories],
+        "log": False,
+    },
 }
 
-AXIS_ORDER = ["capital", "time", "risk"]
+AXIS_ORDER = ["capital", "time", "risk", "market_risk", "technical_risk"]
 
 # The X/Y dropdowns additionally offer "None" (see build_post_script's
 # recompute() for what that triggers); the Size dropdown does not, so it
@@ -192,8 +215,14 @@ AXIS_ORDER_XY = AXIS_ORDER + ["none"]
 # Short labels for the dropdown buttons themselves (the full AXES labels are
 # used for axis titles, but are far too long for a dropdown button — using
 # them there was what made the X/Y axis menus so wide they threw off the
-# spacing between all three dropdowns).
-AXIS_SHORT_LABELS = {"capital": "Capital", "time": "Time", "risk": "Risk", "none": "None"}
+# spacing between all three dropdowns). "Mkt risk"/"Tech risk" are kept
+# short rather than "Market risk"/"Technical risk" for the same reason —
+# the widest option in a dropdown's list sets that dropdown's width, and a
+# much-wider option would throw off the five-way even spacing again.
+AXIS_SHORT_LABELS = {
+    "capital": "Capital", "time": "Time", "risk": "Risk",
+    "market_risk": "Mkt risk", "technical_risk": "Tech risk", "none": "None",
+}
 SIZE_SHORT_LABELS = ["Uniform", "By capital"]
 CAPITAL_SCALE_LABELS = ["Linear", "Log"]
 COLOR_TOGGLE_LABELS = ["Off", "On"]
@@ -205,28 +234,68 @@ NEUTRAL_MARKER_COLOR = "#404040"
 
 # When one axis is "None", the remaining data axis renders as a horizontal
 # dot plot (categorical rows on Y, sorted by this data axis's value; see
-# recompute() in build_post_script). Descending for all three — largest value
+# recompute() in build_post_script). Descending for all five — largest value
 # at the top row, decreasing as you read down — matching the standard
 # ranked-bar-chart/leaderboard convention, and consistent across axes rather
 # than flipping direction depending on which one is selected.
-SORT_DIRECTION = {"capital": "desc", "time": "desc", "risk": "desc"}
+SORT_DIRECTION = {"capital": "desc", "time": "desc", "risk": "desc", "market_risk": "desc", "technical_risk": "desc"}
 
-# Dict order is also legend order.
-RISK_TYPE_COLORS = {
-    "regulatory": "#7f7f7f",
-    "market": "#d62728",
-    "technical": "#1f77b4",
-    "market/technical": "#9467bd",
+# Color is now DERIVED from market_risk_score/technical_risk_score at build
+# time, rather than a hand-assigned category — see classify_quadrant().
+# Threshold/margin are named constants specifically so they're easy to tune
+# per the spec; both are on the 0-100 score scale.
+QUADRANT_THRESHOLD = 50  # "high" vs "low" boundary for a single score
+QUADRANT_MARGIN = 15  # point gap beyond which one score counts as "clearly" higher than the other
+
+
+def classify_quadrant(market_score, technical_score):
+    """market-dominant / technical-dominant / both-high / both-low.
+
+    Dominance (a >15-point gap either way) is checked before the high/low
+    split, so e.g. a 40 vs 80 pair is technical-dominant even though 40 is
+    itself below the threshold — relative gap wins over absolute level.
+    Only once the two scores are within the margin of each other (neither
+    clearly dominant) do both-high/both-low apply; the spec doesn't say
+    what happens if that "comparable" pair straddles the threshold (e.g.
+    55 vs 48), so that edge case is resolved here by comparing their
+    average to the threshold.
+    """
+    diff = market_score - technical_score
+    if diff > QUADRANT_MARGIN:
+        return "market-dominant"
+    if diff < -QUADRANT_MARGIN:
+        return "technical-dominant"
+    if (market_score + technical_score) / 2 >= QUADRANT_THRESHOLD:
+        return "both-high"
+    return "both-low"
+
+
+# Dict order is also legend order. Colors reused 1:1 from the old
+# risk_type scheme (see prior color-toggle work) so the visual language
+# doesn't change mid-talk: gray/red/blue/purple in the same relative slots.
+QUADRANT_COLORS = {
+    "both-low": "#7f7f7f",  # gray — repurposed from "regulatory"; no category maps to gray for regulatory reasons anymore
+    "market-dominant": "#d62728",  # red, same as old "market"
+    "technical-dominant": "#1f77b4",  # blue, same as old "technical"
+    "both-high": "#9467bd",  # purple, same as old "market/technical" hybrid — now a precise quadrant instead of a hand-picked label
 }
 
-# Legend text only — wrapped after the "/" since "market/technical" is too
-# wide for the legend's margin as a single line. The underlying risk_type
-# value (used for data matching and the hover tooltip) stays unwrapped.
-LEGEND_LABELS = {
-    "regulatory": "regulatory",
-    "market": "market",
-    "technical": "technical",
-    "market/technical": "market/<br>technical",
+# Legend text — wrapped with <br> since these phrases are too wide for the
+# legend's margin as a single line (worse than the old "market/technical").
+QUADRANT_LEGEND_LABELS = {
+    "both-low": "Low market +<br>low technical",
+    "market-dominant": "Market-dominant<br>risk",
+    "technical-dominant": "Technical-dominant<br>risk",
+    "both-high": "High market +<br>high technical",
+}
+
+# Hover tooltip text — same phrases, unwrapped (hover has more room, and a
+# literal "<br>" would just show as a mid-sentence break there).
+QUADRANT_HOVER_LABELS = {
+    "both-low": "Low market + low technical",
+    "market-dominant": "Market-dominant risk",
+    "technical-dominant": "Technical-dominant risk",
+    "both-high": "High market + high technical",
 }
 
 MIN_MARKER_SIZE = 14
@@ -239,24 +308,28 @@ DIV_ID = "chart-div"
 # word-wrap, not a single fixed break point — see build_post_script).
 TITLE_TEXT = "Entrepreneurship: Capital / Time / Failure Risk by Business Category"
 
-# customdata layout per point: [name, capital_usd, time_months, risk_pct, risk_type]
+# customdata layout per point:
+# [name, capital_usd, time_months, risk_pct, market_risk_score, technical_risk_score, quadrant_hover_label]
 HOVERTEMPLATE = (
     "<b>%{customdata[0]}</b><br><br>"
     "Capital: $%{customdata[1]:,.0f}<br>"
     "Time: %{customdata[2]} months<br>"
     "Risk: %{customdata[3]}%<br>"
-    "Risk type: %{customdata[4]}"
+    "Market risk: %{customdata[4]}<br>"
+    "Technical risk: %{customdata[5]}<br>"
+    "Classification: %{customdata[6]}"
     "<extra></extra>"
 )
 
-risk_type_order = [rt for rt in RISK_TYPE_COLORS if any(c["risk_type"] == rt for c in categories)]
+category_quadrants = [classify_quadrant(c["market_risk_score"], c["technical_risk_score"]) for c in categories]
+quadrant_order = [q for q in QUADRANT_COLORS if q in category_quadrants]
 
 
 def build_traces(x_key, y_key):
-    """One trace per risk type so the legend and color-by-risk-type both work."""
+    """One trace per quadrant so the legend and color-by-quadrant both work."""
     traces = []
-    for risk_type in risk_type_order:
-        idx = [i for i, c in enumerate(categories) if c["risk_type"] == risk_type]
+    for quadrant in quadrant_order:
+        idx = [i for i, q in enumerate(category_quadrants) if q == quadrant]
         traces.append(
             go.Scatter(
                 x=[AXES[x_key]["values"][i] for i in idx],
@@ -264,12 +337,13 @@ def build_traces(x_key, y_key):
                 customdata=[
                     [categories[i]["name"], categories[i]["capital_usd"],
                      categories[i]["time_months"], categories[i]["risk_pct"],
-                     categories[i]["risk_type"]]
+                     categories[i]["market_risk_score"], categories[i]["technical_risk_score"],
+                     QUADRANT_HOVER_LABELS[quadrant]]
                     for i in idx
                 ],
                 mode="markers",
-                name=LEGEND_LABELS[risk_type],
-                marker=dict(size=UNIFORM_MARKER_SIZE, color=RISK_TYPE_COLORS[risk_type], opacity=0.85),
+                name=QUADRANT_LEGEND_LABELS[quadrant],
+                marker=dict(size=UNIFORM_MARKER_SIZE, color=QUADRANT_COLORS[quadrant], opacity=0.85),
                 hovertemplate=HOVERTEMPLATE,
                 hoverlabel=dict(font_size=24, font_family="Arial"),
             )
@@ -372,7 +446,9 @@ def build_post_script():
         function valueFor(cd, key) {{
             if (key === "capital") return cd[1];
             if (key === "time") return cd[2];
-            return cd[3];
+            if (key === "risk") return cd[3];
+            if (key === "market_risk") return cd[4];
+            if (key === "technical_risk") return cd[5];
         }}
 
         // Time/risk are permanently linear; capital's type follows the
@@ -683,7 +759,7 @@ def main():
         xaxis=axis_layout(default_x),
         yaxis=axis_layout(default_y),
         legend=dict(
-            title=dict(text="<b>Risk Type</b>", font=dict(size=LEGEND_TITLE_FONT_SIZE)),
+            title=dict(text="<b>Risk Classification</b>", font=dict(size=LEGEND_TITLE_FONT_SIZE)),
             font=dict(size=LEGEND_ITEM_FONT_SIZE),
             tracegroupgap=LEGEND_ITEM_GAP,
             # Pin the legend's top edge to the plot's top edge so it only
