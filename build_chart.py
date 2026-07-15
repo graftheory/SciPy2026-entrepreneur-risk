@@ -220,7 +220,7 @@ AXIS_ORDER_XY = AXIS_ORDER + ["none"]
 # the widest option in a dropdown's list sets that dropdown's width, and a
 # much-wider option would throw off the five-way even spacing again.
 AXIS_SHORT_LABELS = {
-    "capital": "Capital", "time": "Time", "risk": "Risk",
+    "capital": "Capital", "time": "Time", "risk": "Failure",
     "market_risk": "Mkt risk", "technical_risk": "Tech risk", "none": "None",
 }
 SIZE_SHORT_LABELS = ["Uniform", "By capital"]
