@@ -250,6 +250,24 @@ LEGEND_TITLE_FONT_SIZE = 20
 LEGEND_ITEM_FONT_SIZE = 18
 LEGEND_ITEM_GAP = 14  # vertical px between legend entries — a bit more than default, not double-spaced
 
+# Fixed pixel row-heights for the header band (title / label row / dropdown
+# row) stacked above the plot. These are deliberately plain pixels, not
+# fractions — margin.t and the label/dropdown y-positions are then derived
+# from them (in JS, recomputed on every resize) so the vertical rhythm stays
+# constant regardless of window size, instead of drifting the way "paper"
+# fractions do as the plot area's pixel height changes.
+TOP_PADDING = 12
+TITLE_LINE_HEIGHT = round(TITLE_FONT_SIZE * 1.3)
+GAP_TITLE_LABEL = 22
+LABEL_HEIGHT = 20
+GAP_LABEL_DROPDOWN = 8
+DROPDOWN_HEIGHT = 30
+GAP_DROPDOWN_PLOT = 10
+MARGIN_B = 60
+
+MARGIN_T = TOP_PADDING + TITLE_LINE_HEIGHT + GAP_TITLE_LABEL + LABEL_HEIGHT + GAP_LABEL_DROPDOWN + DROPDOWN_HEIGHT + GAP_DROPDOWN_PLOT
+MARGIN_T_WRAPPED = MARGIN_T + TITLE_LINE_HEIGHT
+
 
 def axis_layout(key):
     axis = AXES[key]
@@ -337,23 +355,72 @@ def build_post_script():
         // itself being 16:9.
         var ASPECT = 16 / 9;
 
-        // Wrap the title to two lines once the window gets too narrow for it
-        // to fit on one, based on actually measuring the rendered text width
-        // rather than guessing at a fixed breakpoint.
+        // Header layout (title / "X axis"-etc. labels / dropdown row), all
+        // stacked above the plot. Plotly only lets the title live in
+        // "container" coordinates (a fraction of the *whole* canvas) while
+        // the labels and dropdown menus only support "paper" coordinates (a
+        // fraction of the plot area) — those two references don't scale
+        // together as the window resizes, which is what caused the title to
+        // drift into, or away from, the row below it. So instead we treat
+        // each row's height as a fixed pixel constant, and on every resize
+        // recompute both margin.t and every element's fractional position
+        // from those fixed pixel heights and the current container size —
+        // that keeps the physical (pixel) spacing constant regardless of
+        // window size, rather than leaving it to drift.
         var TITLE_LINE1 = {json.dumps(TITLE_LINE1)};
         var TITLE_LINE2 = {json.dumps(TITLE_LINE2)};
-        var TITLE_FONT_PX = {json.dumps(TITLE_FONT_SIZE)};
-        var titleCtx = document.createElement("canvas").getContext("2d");
-        titleCtx.font = "bold " + TITLE_FONT_PX + "px Arial, sans-serif";
-        var titleOneLineWidth = titleCtx.measureText(TITLE_LINE1 + " " + TITLE_LINE2).width;
+        var TOP_PADDING = {json.dumps(TOP_PADDING)};
+        var TITLE_LINE_HEIGHT = {json.dumps(TITLE_LINE_HEIGHT)};
+        var GAP_TITLE_LABEL = {json.dumps(GAP_TITLE_LABEL)};
+        var LABEL_HEIGHT = {json.dumps(LABEL_HEIGHT)};
+        var GAP_LABEL_DROPDOWN = {json.dumps(GAP_LABEL_DROPDOWN)};
+        var DROPDOWN_HEIGHT = {json.dumps(DROPDOWN_HEIGHT)};
+        var GAP_DROPDOWN_PLOT = {json.dumps(GAP_DROPDOWN_PLOT)};
+        var MARGIN_B = {json.dumps(MARGIN_B)};
 
-        function fitTitle(plotWidthPx) {{
-            var text = (titleOneLineWidth + 40 > plotWidthPx)
+        // Measure the ACTUAL rendered width of the single-line title once,
+        // right after the initial draw (text width depends only on
+        // font/content, not container size, so one measurement is reusable)
+        // rather than estimating with an offscreen canvas: a canvas estimate
+        // systematically under-measured versus Plotly's real SVG text
+        // rendering, so the title kept overflowing the window before wrapping.
+        var titleEl = gd.querySelector("text.gtitle");
+        var titleOneLineWidth = titleEl ? titleEl.getBBox().width : 0;
+        var titleWrapped = false;
+
+        function layoutHeader(containerWidthPx, containerHeightPx) {{
+            titleWrapped = titleOneLineWidth + 30 > containerWidthPx;
+            var lineCount = titleWrapped ? 2 : 1;
+            var titleHeight = lineCount * TITLE_LINE_HEIGHT;
+            var marginT = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT
+                + GAP_LABEL_DROPDOWN + DROPDOWN_HEIGHT + GAP_DROPDOWN_PLOT;
+            var plotAreaHeight = containerHeightPx - marginT - MARGIN_B;
+
+            var titleY = 1 - (TOP_PADDING / containerHeightPx);
+            var labelCenterOffset = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT / 2;
+            var labelY = 1 + (marginT - labelCenterOffset) / plotAreaHeight;
+            var dropdownTopOffset = TOP_PADDING + titleHeight + GAP_TITLE_LABEL + LABEL_HEIGHT + GAP_LABEL_DROPDOWN;
+            var dropdownY = 1 + (marginT - dropdownTopOffset) / plotAreaHeight;
+
+            var text = titleWrapped
                 ? "<b>" + TITLE_LINE1 + "<br>" + TITLE_LINE2 + "</b>"
                 : "<b>" + TITLE_LINE1 + " " + TITLE_LINE2 + "</b>";
-            Plotly.relayout(gd, {{"title.text": text}});
+
+            Plotly.relayout(gd, {{
+                "title.text": text,
+                "title.y": titleY,
+                "margin.t": marginT,
+                "annotations[0].y": labelY, "annotations[1].y": labelY, "annotations[2].y": labelY,
+                "updatemenus[0].y": dropdownY, "updatemenus[1].y": dropdownY, "updatemenus[2].y": dropdownY,
+            }});
         }}
 
+        // Lock the chart to a 16:9 box regardless of window/screen shape —
+        // fills whichever dimension is the tighter constraint, letterboxing
+        // the other (see body background) so it looks right on any laptop
+        // and matches a 16:9 projector without relying on the browser window
+        // itself being 16:9.
+        var ASPECT = 16 / 9;
         function fitAspect() {{
             var vw = window.innerWidth, vh = window.innerHeight;
             var w = vw, h = vw / ASPECT;
@@ -361,7 +428,7 @@ def build_post_script():
             gd.style.width = w + "px";
             gd.style.height = h + "px";
             Plotly.Plots.resize(gd);
-            fitTitle(w);
+            layoutHeader(w, h);
         }}
         window.addEventListener("resize", fitAspect);
         fitAspect();
@@ -377,11 +444,11 @@ def main():
         fig.add_trace(tr)
 
     fig.update_layout(
-        # Title uses the default "container" ref (fraction of the whole
-        # canvas) pinned near the very top; dropdown labels/menus use "paper"
-        # ref (fraction of the plot area) so they scale with the plot. A
-        # generous top margin keeps physical space between the two bands so
-        # they can't overlap regardless of the figure's pixel size.
+        # Static fallback values only — the post_script's layoutHeader() runs
+        # immediately on load and recomputes title.y, margin.t, and the
+        # label/dropdown y-positions from fixed pixel row-heights (see the
+        # comment there for why), so these just need to be reasonable before
+        # that first pass runs.
         title=dict(
             text=f"<b>{TITLE_LINE1} {TITLE_LINE2}</b>",
             x=0.5, xanchor="center",
@@ -400,7 +467,7 @@ def main():
             x=1.02, xanchor="left", y=1, yanchor="top",
         ),
         template="plotly_white",
-        margin=dict(t=100, b=60),
+        margin=dict(t=MARGIN_T, b=MARGIN_B),
         # Evenly space all three dropdowns across the plot width using the
         # same "center" anchor for each, so — now that their button labels
         # are similar lengths (see AXIS_SHORT_LABELS/SIZE_SHORT_LABELS) — the
@@ -428,6 +495,12 @@ def main():
         full_html=False,
         div_id=DIV_ID,
         post_script=build_post_script(),
+        # The modebar's zoom/pan/camera icons (top-right, shown on hover)
+        # aren't part of the spec — only the dropdowns and hover tooltips are
+        # — and they were overlapping the title whenever the presenter moved
+        # the mouse to trigger a point's tooltip. Hiding it removes that
+        # overlap entirely.
+        config={"displayModeBar": False},
     )
 
     page = f"""<!DOCTYPE html>
